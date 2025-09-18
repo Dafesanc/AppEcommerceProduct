@@ -1,0 +1,42 @@
+/* Apple-style navigation using Onest font */
+.apple-nav-link {
+  font-family: 'Onest', sans-serif;
+  font-weight: 400; /* Regular weight like Apple */
+}
+
+.apple-logo {
+  font-family: 'Onest', sans-serif;
+  font-weight: 500; /* Medium weight for logo */
+}
+
+/* Navbar backdrop blur effect */
+nav {
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  transition: all 0.3s ease-in-out;
+}
+
+/* Button accessibility and hover effects */
+button {
+  transition: all 0.2s ease-in-out;
+}
+
+button:hover {
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* Mobile menu animation */
+.mobile-menu-enter {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.mobile-menu-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
