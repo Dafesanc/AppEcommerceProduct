@@ -1,1 +1,276 @@
-<p>register works!</p>
+<div class="register-container">
+  <!-- Overlay with reduced opacity -->
+  <div class="register-overlay"></div>
+
+  <!-- Sign up header - Apple style -->
+  <div class="text-center mb-8 relative z-20">
+    <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-black mb-2 tracking-tight leading-tight
+               drop-shadow-lg filter
+               opacity-0 animate-fade-in-up
+               transition-all duration-700 ease-out
+               hover:scale-105 hover:drop-shadow-2xl
+               selection:bg-white selection:text-black">
+      Crea tu cuenta hoy.
+    </h1>
+    <div class="w-16 h-1 bg-white mx-auto rounded-full opacity-60 mt-4
+                transition-all duration-500 ease-out
+                hover:w-24 hover:opacity-100"></div>
+  </div>
+
+  <!-- Registration Form -->
+  <div class="register-form-container">
+
+    <!-- Logo/Brand -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-12 h-12 rounded-full mb-3"
+           style="background-color: rgb(0, 0, 0);">
+        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Title -->
+    <h1 class="text-2xl font-semibold text-gray-800 text-center mb-8">
+      Registrate en tu cuenta
+    </h1>
+
+    <!-- Error Message -->
+    <div *ngIf="errorMessage" class="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg animate-pulse">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Success Message -->
+    <div *ngIf="successMessage" class="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg animate-pulse">
+      {{ successMessage }}
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="formRegister" (ngSubmit)="registrarse()">
+
+      <!-- First Name Field -->
+      <div class="mb-6">
+        <label for="firstName" class="block text-sm font-medium text-gray-700 mb-2">
+          Nombres
+        </label>
+        <input
+          type="text"
+          id="firstName"
+          formControlName="firstName"
+          placeholder="Juan"
+          class="w-full px-4 py-3 rounded-lg border-0 text-gray-800 placeholder-gray-400 focus:ring-2 focus:outline-none transition-all duration-200"
+          style="background-color: rgba(255, 255, 255, 0.1);"
+          [class.ring-2]="firstNameFocused || (firstNameControl?.touched && firstNameControl?.invalid)"
+          [style.ring-color]="(firstNameControl?.touched && firstNameControl?.invalid) ? 'rgb(239, 68, 68)' : (firstNameFocused ? 'rgb(16, 185, 129)' : '')"
+          (focus)="onFieldFocus('firstName')"
+          (blur)="onFieldBlur('firstName')"
+          aria-required="true"
+          autocomplete="given-name">
+
+        <!-- Validation errors -->
+        <div *ngIf="firstNameControl?.touched && firstNameControl?.invalid" class="mt-2 text-sm text-[#ef4444]">
+          <div *ngIf="firstNameControl?.errors?.['required']">Los nombres son requeridos</div>
+          <div *ngIf="firstNameControl?.errors?.['minlength']">Mínimo 2 caracteres</div>
+        </div>
+      </div>
+
+      <!-- Last Name Field -->
+      <div class="mb-6">
+        <label for="lastName" class="block text-sm font-medium text-gray-700 mb-2">
+          Apellidos
+        </label>
+        <input
+          type="text"
+          id="lastName"
+          formControlName="lastName"
+          placeholder="Pérez"
+          class="w-full px-4 py-3 rounded-lg border-0 text-gray-800 placeholder-gray-400 focus:ring-2 focus:outline-none transition-all duration-200"
+          style="background-color: rgba(255, 255, 255, 0.1);"
+          [class.ring-2]="lastNameFocused || (lastNameControl?.touched && lastNameControl?.invalid)"
+          [style.ring-color]="(lastNameControl?.touched && lastNameControl?.invalid) ? 'rgb(239, 68, 68)' : (lastNameFocused ? 'rgb(16, 185, 129)' : '')"
+          (focus)="onFieldFocus('lastName')"
+          (blur)="onFieldBlur('lastName')"
+          aria-required="true"
+          autocomplete="family-name">
+
+        <!-- Validation errors -->
+        <div *ngIf="lastNameControl?.touched && lastNameControl?.invalid" class="mt-2 text-sm text-[#ef4444]">
+          <div *ngIf="lastNameControl?.errors?.['required']">Los apellidos son requeridos</div>
+          <div *ngIf="lastNameControl?.errors?.['minlength']">Mínimo 2 caracteres</div>
+        </div>
+      </div>
+
+      <!-- Email Field -->
+      <div class="mb-6">
+        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+          Correo electrónico
+        </label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          placeholder="nombre@empresa.com"
+          class="w-full px-4 py-3 rounded-lg border-0 text-gray-800 placeholder-gray-400 focus:ring-2 focus:outline-none transition-all duration-200"
+          style="background-color: rgba(255, 255, 255, 0.1);"
+          [class.ring-2]="emailFocused || (emailControl?.touched && emailControl?.invalid)"
+          [style.ring-color]="(emailControl?.touched && emailControl?.invalid) ? 'rgb(239, 68, 68)' : (emailFocused ? 'rgb(16, 185, 129)' : '')"
+          (focus)="onFieldFocus('email')"
+          (blur)="onFieldBlur('email')"
+          aria-required="true"
+          autocomplete="email">
+
+        <!-- Email validation errors -->
+        <div *ngIf="emailControl?.touched && emailControl?.invalid" class="mt-2 text-sm text-[#ef4444]">
+          <div *ngIf="emailControl?.errors?.['required']">El correo es requerido</div>
+          <div *ngIf="emailControl?.errors?.['email']">Correo inválido</div>
+        </div>
+      </div>
+
+      <!-- Password Field -->
+      <div class="mb-6">
+        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+          Contraseña
+        </label>
+        <div class="relative">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            formControlName="password"
+            placeholder="••••••••"
+            class="w-full px-4 py-3 rounded-lg border-0 text-gray-800 placeholder-gray-500 focus:ring-2 focus:outline-none transition-all duration-200 pr-12"
+            style="background-color: rgba(255, 255, 255, 0.1);"
+            [class.ring-2]="passwordFocused || (passwordControl?.touched && passwordControl?.invalid)"
+            [style.ring-color]="(passwordControl?.touched && passwordControl?.invalid) ? 'rgb(239, 68, 68)' : (passwordFocused ? 'rgb(16, 185, 129)' : '')"
+            (focus)="onFieldFocus('password')"
+            (blur)="onFieldBlur('password')"
+            aria-required="true"
+            autocomplete="new-password">
+          <button
+            type="button"
+            (click)="togglePassword()"
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-800 hover:text-gray-600 transition-colors"
+            aria-label="Toggle password visibility">
+            <svg *ngIf="!showPassword" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+              <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
+            </svg>
+            <svg *ngIf="showPassword" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd"></path>
+              <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Password validation errors -->
+        <div *ngIf="passwordControl?.touched && passwordControl?.invalid" class="mt-2 text-sm text-[#ef4444]">
+          <div *ngIf="passwordControl?.errors?.['required']">La contraseña es requerida</div>
+          <div *ngIf="passwordControl?.errors?.['minlength']">Mínimo 8 caracteres</div>
+        </div>
+      </div>
+
+      <!-- Confirm Password Field -->
+      <div class="mb-6">
+        <label for="confirmPassword" class="block text-sm font-medium text-gray-700 mb-2">
+          Confirmar contraseña
+        </label>
+        <div class="relative">
+          <input
+            [type]="showConfirmPassword ? 'text' : 'password'"
+            id="confirmPassword"
+            formControlName="confirmPassword"
+            placeholder="••••••••"
+            class="w-full px-4 py-3 rounded-lg border-0 text-gray-800 placeholder-gray-500 focus:ring-2 focus:outline-none transition-all duration-200 pr-12"
+            style="background-color: rgba(255, 255, 255, 0.1);"
+            [class.ring-2]="confirmPasswordFocused || (confirmPasswordControl?.touched && confirmPasswordControl?.invalid) || (formRegister.touched && formRegister.errors?.['passwordMismatch'])"
+            [style.ring-color]="(confirmPasswordControl?.touched && (confirmPasswordControl?.invalid || formRegister.errors?.['passwordMismatch'])) ? 'rgb(239, 68, 68)' : (confirmPasswordFocused ? 'rgb(16, 185, 129)' : '')"
+            (focus)="onFieldFocus('confirmPassword')"
+            (blur)="onFieldBlur('confirmPassword')"
+            aria-required="true"
+            autocomplete="new-password">
+          <button
+            type="button"
+            (click)="toggleConfirmPassword()"
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-800 hover:text-gray-600 transition-colors"
+            aria-label="Toggle confirm password visibility">
+            <svg *ngIf="!showConfirmPassword" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path>
+              <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path>
+            </svg>
+            <svg *ngIf="showConfirmPassword" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clip-rule="evenodd"></path>
+              <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Confirm Password validation errors -->
+        <div *ngIf="confirmPasswordControl?.touched && (confirmPasswordControl?.invalid || formRegister.errors?.['passwordMismatch'])" class="mt-2 text-sm text-[#ef4444]">
+          <div *ngIf="confirmPasswordControl?.errors?.['required']">Confirmar contraseña es requerido</div>
+          <div *ngIf="formRegister.errors?.['passwordMismatch'] && confirmPasswordControl?.touched">Las contraseñas no coinciden</div>
+        </div>
+      </div>
+
+      <!-- Phone Field with Country Selector -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          Número telefónico
+        </label>
+        <div class="flex gap-2">
+          <!-- Country Select -->
+          <select
+            formControlName="country"
+            class="px-3 py-3 rounded-lg border-0 text-gray-800 focus:ring-2 focus:outline-none transition-all duration-200 bg-white cursor-pointer"
+            style="background-color: rgba(255, 255, 255, 0.1);"
+            [class.ring-2]="phoneFocused"
+            [style.ring-color]="phoneFocused ? 'rgb(16, 185, 129)' : ''">
+            <option *ngFor="let country of countries" [ngValue]="country">
+              {{ country.flag }} {{ country.code }} ({{ country.prefix }})
+            </option>
+          </select>
+
+          <!-- Phone Input -->
+          <input
+            type="tel"
+            id="phone"
+            formControlName="phone"
+            placeholder="1234567"
+            class="flex-1 px-4 py-3 rounded-lg border-0 text-gray-800 placeholder-gray-400 focus:ring-2 focus:outline-none transition-all duration-200"
+            style="background-color: rgba(255, 255, 255, 0.1);"
+            [class.ring-2]="phoneFocused || (phoneControl?.touched && phoneControl?.invalid)"
+            [style.ring-color]="(phoneControl?.touched && phoneControl?.invalid) ? 'rgb(239, 68, 68)' : (phoneFocused ? 'rgb(16, 185, 129)' : '')"
+            (focus)="onFieldFocus('phone')"
+            (blur)="onFieldBlur('phone')"
+            aria-required="true"
+            autocomplete="tel">
+        </div>
+
+        <!-- Phone validation errors -->
+        <div *ngIf="phoneControl?.touched && phoneControl?.invalid" class="mt-2 text-sm text-[#ef4444]">
+          <div *ngIf="phoneControl?.errors?.['required']">El teléfono es requerido</div>
+          <div *ngIf="phoneControl?.errors?.['pattern']">Teléfono inválido (7-15 dígitos)</div>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        [disabled]="loading"
+        class="w-full bg-black text-white py-3 px-4 rounded-lg font-semibold hover:bg-gray-800 transition-all duration-200 focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50 disabled:cursor-not-allowed">
+        {{ loading ? 'Registrando...' : 'Crear cuenta' }}
+      </button>
+
+      <!-- Already have account? -->
+      <div class="mt-6 text-center">
+        <p class="text-gray-700">
+          ¿Ya tienes cuenta?
+          <button
+            type="button"
+            (click)="switchToLogin()"
+            class="font-semibold text-black hover:underline transition-colors">
+            Inicia sesión aquí
+          </button>
+        </p>
+      </div>
+    </form>
+  </div>
+</div>

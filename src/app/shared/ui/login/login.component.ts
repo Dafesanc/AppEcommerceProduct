@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit} from '@angular/core';
+import { Component, inject, linkedSignal, OnInit, signal} from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup} from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -24,9 +24,7 @@ export class LoginComponent implements OnInit {
       password: ['', [Validators.required, Validators.minLength(6)]],
       rememberMe: [false]
     });
-  }
-  constructor() {
-    console.log('LoginComponent: Constructor called');
+    this.choice.set("fresa");
   }
   emailFocused = false;
   passwordFocused = false;
@@ -105,5 +103,13 @@ export class LoginComponent implements OnInit {
     if (field === 'email') this.emailFocused = false;
     if (field === 'password') this.passwordFocused = false;
   }
+  options = signal(['manzana', 'banana', 'cereza']);
+  choice = linkedSignal(() => this.options()[0]);
+   constructor() {
+    console.log('LoginComponent: Constructor called');
+    this.choice.set("fresa");
+    console.log(this.choice());
+  }
+
 
 }

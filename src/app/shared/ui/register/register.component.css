@@ -1,0 +1,306 @@
+/* Background container */
+.register-container {
+  min-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  background-image: url('/imagen-banner.png') !important;
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  padding: 2rem 1rem !important;
+}
+
+/* Overlay con gradiente más sofisticado */
+.register-overlay {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.6) 0%,
+    rgba(0, 0, 0, 0.4) 50%,
+    rgba(0, 0, 0, 0.7) 100%
+  ) !important;
+}
+
+/* Logo principal de la aplicación */
+.register-container > div:first-child {
+  position: relative !important;
+  z-index: 15 !important;
+  margin-bottom: 2rem !important;
+}
+
+.register-container > div:first-child img {
+  filter: brightness(1.2) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3)) !important;
+  max-width: 200px !important;
+  height: auto !important;
+}
+
+/* Form container - Apple/Tesla inspired elevated card */
+.register-form-container {
+  position: relative !important;
+  z-index: 10 !important;
+  width: 100% !important;
+  max-width: 28rem !important;
+  padding: 2.5rem !important;
+  border-radius: 1.20rem !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+
+  /* Multi-layered sophisticated shadow inspired by Apple's design */
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 32px 64px -12px rgba(0, 0, 0, 0.4),
+    0 8px 32px -8px rgba(0, 0, 0, 0.3),
+    0 2px 8px -2px rgba(0, 0, 0, 0.2) !important;
+
+  /* Premium frosted glass effect */
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.85) 50%,
+    rgba(255, 255, 255, 0.9) 100%
+  ) !important;
+
+  /* Subtle backdrop blur for modern glass effect */
+  -webkit-backdrop-filter: blur(20px) saturate(1.8) !important;
+  backdrop-filter: blur(20px) saturate(1.8) !important;
+
+  /* Elegant border with subtle gradient */
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+
+  /* Smooth entrance animation */
+  animation: elegantFadeIn 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+
+  /* Subtle hover effect for interactivity */
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+/* Hover effect for premium feel */
+.register-form-container:hover {
+  transform: translateY(-2px) !important;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.15),
+    0 40px 80px -12px rgba(0, 0, 0, 0.45),
+    0 12px 40px -8px rgba(0, 0, 0, 0.35),
+    0 4px 12px -2px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Responsividad del logo principal */
+@media (max-width: 480px) {
+  .register-container {
+    padding: 1rem !important;
+  }
+
+  .register-container > div:first-child {
+    margin-bottom: 1.5rem !important;
+  }
+
+  .register-container > div:first-child img {
+    max-width: 150px !important;
+  }
+
+  .register-form-container {
+    padding: 2rem 1.5rem !important;
+    max-width: 24rem !important;
+  }
+}
+
+@media (min-width: 640px) {
+  .register-container > div:first-child img {
+    max-width: 240px !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .register-container > div:first-child img {
+    max-width: 280px !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .register-container > div:first-child img {
+    max-width: 320px !important;
+  }
+}
+
+/* Focus styles for inputs */
+input:focus,
+select:focus {
+  box-shadow: 0 0 0 2px rgb(16, 185, 129) !important;
+}
+
+input[type="checkbox"]:checked {
+  background-color: rgb(215, 74, 58) !important;
+  border-color: rgb(215, 74, 58) !important;
+}
+
+/* Elegant animations inspired by premium brands */
+@keyframes elegantFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+    filter: blur(10px);
+  }
+  50% {
+    opacity: 0.8;
+    transform: translateY(10px) scale(0.98);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Fade in up animation for main title */
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(30px) scale(0.9);
+    filter: blur(5px);
+  }
+  60% {
+    opacity: 0.8;
+    transform: translateY(-5px) scale(1.02);
+    filter: blur(1px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Apply the animation */
+.animate-fade-in-up {
+  animation: fade-in-up 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Enhanced input focus effects */
+input:focus,
+select:focus {
+  box-shadow:
+    0 0 0 3px rgba(16, 185, 129, 0.1),
+    0 0 0 1px rgba(16, 185, 129, 0.3),
+    0 4px 12px rgba(16, 185, 129, 0.15) !important;
+  transform: translateY(-1px) !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+/* Premium button effects */
+button {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px) !important;
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.15),
+    0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0) !important;
+  transition: all 0.1s ease !important;
+}
+
+/* Subtle glow effect for form elements */
+.register-form-container::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.1)
+  );
+  border-radius: 1.3rem;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.register-form-container:hover::before {
+  opacity: 1;
+}
+
+/* Premium title styling */
+h1 {
+  text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    0 4px 8px rgba(0, 0, 0, 0.2),
+    0 8px 16px rgba(0, 0, 0, 0.1) !important;
+
+  /* Smooth text rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Enhanced letter spacing for premium feel */
+  letter-spacing: -0.02em;
+}
+
+/* Responsive title sizing */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 2rem !important;
+    line-height: 1.1 !important;
+  }
+}
+
+@media (min-width: 768px) {
+  h1 {
+    font-size: 2.5rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  h1 {
+    font-size: 3rem !important;
+  }
+}
+
+/* Selection styling for the title */
+h1::selection {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Scrollbar styling for the form container */
+.register-form-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.register-form-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+.register-form-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+}
+
+.register-form-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Country selector styles */
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
