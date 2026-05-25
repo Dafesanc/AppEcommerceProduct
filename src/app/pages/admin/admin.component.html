@@ -1,0 +1,647 @@
+<div class="min-h-screen bg-gray-50 flex">
+
+  <!-- Toast -->
+  @if (toastMsg()) {
+    <div class="fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-sm font-medium text-white transition-all"
+         [class.bg-black]="toastType() === 'ok'"
+         [class.bg-red-500]="toastType() === 'err'">
+      {{ toastMsg() }}
+    </div>
+  }
+
+  <!-- Sidebar -->
+  <aside class="hidden lg:flex flex-col w-56 bg-white border-r border-gray-100 min-h-screen fixed top-0 left-0 pt-16 z-30">
+    <div class="px-4 py-6">
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Panel Admin</p>
+      <nav class="space-y-1">
+        @for (item of NAV_ITEMS; track item.id) {
+          <button
+            (click)="goTo(item.id)"
+            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left"
+            [class.bg-black]="activeSection() === item.id"
+            [class.text-white]="activeSection() === item.id"
+            [class.text-gray-600]="activeSection() !== item.id"
+            [class.hover:bg-gray-50]="activeSection() !== item.id">
+            <span>{{ item.icon }}</span>
+            <span>{{ item.label }}</span>
+          </button>
+        }
+      </nav>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="flex-1 lg:ml-56 pt-16">
+    <div class="p-6 max-w-7xl mx-auto">
+
+      <!-- Mobile nav -->
+      <div class="lg:hidden flex gap-2 overflow-x-auto pb-3 mb-6 scrollbar-hide">
+        @for (item of NAV_ITEMS; track item.id) {
+          <button (click)="goTo(item.id)"
+            class="flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-colors"
+            [class.bg-black]="activeSection()===item.id" [class.text-white]="activeSection()===item.id"
+            [class.bg-white]="activeSection()!==item.id" [class.text-gray-600]="activeSection()!==item.id"
+            [class.border]="activeSection()!==item.id" [class.border-gray-200]="activeSection()!==item.id">
+            {{ item.label }}
+          </button>
+        }
+      </div>
+
+      <!-- ══════════ DASHBOARD ══════════ -->
+      @if (activeSection() === 'dashboard') {
+        <h1 class="text-2xl font-bold text-black mb-6">Dashboard</h1>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div class="bg-white rounded-2xl border border-gray-100 p-5">
+            <p class="text-xs text-gray-500 mb-1">Ingresos totales</p>
+            <p class="text-2xl font-bold text-black">${{ (salesSummary()?.totalRevenue ?? 0) | number:'1.2-2' }}</p>
+          </div>
+          <div class="bg-white rounded-2xl border border-gray-100 p-5">
+            <p class="text-xs text-gray-500 mb-1">Total pedidos</p>
+            <p class="text-2xl font-bold text-black">{{ salesSummary()?.totalOrders ?? 0 }}</p>
+          </div>
+          <div class="bg-white rounded-2xl border border-gray-100 p-5">
+            <p class="text-xs text-gray-500 mb-1">Ticket promedio</p>
+            <p class="text-2xl font-bold text-black">${{ (salesSummary()?.averageOrderValue ?? 0) | number:'1.2-2' }}</p>
+          </div>
+          <div class="bg-white rounded-2xl border border-gray-100 p-5 cursor-pointer hover:border-orange-300" (click)="goTo('productos')">
+            <p class="text-xs text-gray-500 mb-1">Alertas de stock</p>
+            <p class="text-2xl font-bold" [class.text-orange-500]="stockAlerts().length > 0" [class.text-black]="stockAlerts().length === 0">
+              {{ stockAlerts().length }}
+            </p>
+          </div>
+        </div>
+        @if (stockAlerts().length > 0) {
+          <div class="bg-orange-50 border border-orange-200 rounded-2xl p-5">
+            <h3 class="font-semibold text-orange-800 mb-3">⚠ Productos con stock bajo</h3>
+            <div class="space-y-2">
+              @for (alert of stockAlerts(); track alert.id) {
+                <div class="flex items-center justify-between text-sm">
+                  <span class="text-orange-700 font-medium">{{ alert.name }}</span>
+                  <span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full text-xs font-bold">{{ alert.stock }} / min {{ alert.minStock }}</span>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      }
+
+      <!-- ══════════ PEDIDOS ══════════ -->
+      @if (activeSection() === 'pedidos') {
+        <h1 class="text-2xl font-bold text-black mb-6">Pedidos</h1>
+        @if (ordersLoading()) {
+          <div class="text-center py-10 text-gray-400">Cargando pedidos...</div>
+        } @else {
+          <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Pedido</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Estado</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Pago</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Total</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Fecha</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Acción</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                  @for (order of orders(); track order.id) {
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-4 py-3 font-mono text-xs font-medium">#{{ order.orderNumber }}</td>
+                      <td class="px-4 py-3">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium" [class]="getStatusColor(order.status)">
+                          {{ ORDER_STATUS_LABELS[order.status] }}
+                        </span>
+                      </td>
+                      <td class="px-4 py-3 text-gray-600">{{ PAYMENT_METHOD_LABELS[order.paymentMethod] }}</td>
+                      <td class="px-4 py-3 font-semibold">${{ order.total | number:'1.2-2' }}</td>
+                      <td class="px-4 py-3 text-gray-500 text-xs">{{ order.createdAt | date:'dd/MM/yy HH:mm' }}</td>
+                      <td class="px-4 py-3">
+                        <select #selStatus
+                          [value]="order.status"
+                          (change)="updateOrderStatus(order.id, selStatus.value)"
+                          [disabled]="updatingOrderId() === order.id"
+                          class="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-black">
+                          @for (s of ORDER_STATUSES; track s) {
+                            <option [value]="s">{{ ORDER_STATUS_LABELS[s] }}</option>
+                          }
+                        </select>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @if (orders().length === 0) {
+              <div class="text-center py-10 text-gray-400">No hay pedidos aún</div>
+            }
+          </div>
+        }
+      }
+
+      <!-- ══════════ PRODUCTOS ══════════ -->
+      @if (activeSection() === 'productos') {
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-2xl font-bold text-black">Productos</h1>
+          <button (click)="openProductForm()" class="bg-black text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors">
+            + Nuevo producto
+          </button>
+        </div>
+
+        <!-- Formulario crear/editar -->
+        @if (showProductForm()) {
+          <div class="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
+              <h2 class="text-lg font-bold mb-5">{{ editingProduct() ? 'Editar' : 'Crear' }} producto</h2>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="sm:col-span-2">
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Nombre *</label>
+                  <input #inpName type="text" [value]="productForm().name" (input)="updateProductForm('name', inpName.value)"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"/>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">SKU *</label>
+                  <input #inpSku type="text" [value]="productForm().sku" (input)="updateProductForm('sku', inpSku.value)"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"/>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Categoría *</label>
+                  <select #selCat [value]="productForm().categoryId" (change)="updateProductForm('categoryId', selCat.value)"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black">
+                    <option value="">Selecciona...</option>
+                    @for (cat of categories(); track cat.id) {
+                      <option [value]="cat.id">{{ cat.name }}</option>
+                    }
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Precio *</label>
+                  <input #inpPrice type="number" [value]="productForm().price" (input)="updateProductForm('price', +inpPrice.value)"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"/>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Precio promocional</label>
+                  <input #inpPromo type="number" [value]="productForm().promotionalPrice ?? ''" (input)="updateProductForm('promotionalPrice', inpPromo.value ? +inpPromo.value : null)"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"/>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Stock</label>
+                  <input #inpStock type="number" [value]="productForm().stock" (input)="updateProductForm('stock', +inpStock.value)"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"/>
+                </div>
+                <div>
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Stock mínimo</label>
+                  <input #inpMinStock type="number" [value]="productForm().minStock" (input)="updateProductForm('minStock', +inpMinStock.value)"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"/>
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Descripción corta</label>
+                  <input #inpShortDesc type="text" [value]="productForm().shortDescription" (input)="updateProductForm('shortDescription', inpShortDesc.value)"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"/>
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Descripción completa *</label>
+                  <textarea #inpDesc rows="4" [value]="productForm().description" (input)="updateProductForm('description', inpDesc.value)"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black resize-none"></textarea>
+                </div>
+                <div class="flex items-center gap-6">
+                  <label class="flex items-center gap-2 cursor-pointer text-sm">
+                    <input #chkPromo type="checkbox" [checked]="productForm().isPromotional" (change)="updateProductForm('isPromotional', chkPromo.checked)" class="accent-black"/>
+                    Promocional
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer text-sm">
+                    <input #chkFeatured type="checkbox" [checked]="productForm().isFeatured" (change)="updateProductForm('isFeatured', chkFeatured.checked)" class="accent-black"/>
+                    Destacado
+                  </label>
+                </div>
+                <div class="sm:col-span-2">
+                  <label class="block text-xs font-medium text-gray-600 mb-1">Imágenes (máx. 10, 5MB c/u)</label>
+                  <input type="file" multiple accept="image/*" (change)="onImageSelect($event)"
+                    class="w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-black file:text-white file:text-xs file:cursor-pointer"/>
+                  @if (productImages().length > 0) {
+                    <p class="text-xs text-green-600 mt-1">{{ productImages().length }} imagen(es) seleccionada(s)</p>
+                  }
+                </div>
+              </div>
+              <div class="flex gap-3 mt-6">
+                <button (click)="showProductForm.set(false)" class="flex-1 border border-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-medium hover:border-black transition-colors">Cancelar</button>
+                <button (click)="saveProduct()" [disabled]="savingProduct()" class="flex-1 bg-black text-white py-2.5 rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors disabled:opacity-50">
+                  {{ savingProduct() ? 'Guardando...' : (editingProduct() ? 'Actualizar' : 'Crear producto') }}
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+
+        @if (productsLoading()) {
+          <div class="text-center py-10 text-gray-400">Cargando productos...</div>
+        } @else {
+          <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Producto</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">SKU</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Precio</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Stock</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Ventas</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                  @for (p of products(); track p.id) {
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-4 py-3">
+                        <div class="flex items-center gap-3">
+                          <img [src]="getMainImage(p)" [alt]="p.name" class="w-10 h-10 object-contain bg-gray-100 rounded-lg p-1"/>
+                          <div>
+                            <p class="font-medium text-gray-900 max-w-[200px] truncate">{{ p.name }}</p>
+                            <div class="flex gap-1 mt-0.5">
+                              @if (p.isPromotional) { <span class="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">Oferta</span> }
+                              @if (p.isFeatured) { <span class="text-[10px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-full">Destacado</span> }
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="px-4 py-3 font-mono text-xs text-gray-500">{{ p.sku }}</td>
+                      <td class="px-4 py-3">
+                        <p class="font-semibold">${{ (p.promotionalPrice ?? p.price) | number:'1.2-2' }}</p>
+                        @if (p.promotionalPrice) { <p class="text-xs text-gray-400 line-through">${{ p.price | number:'1.2-2' }}</p> }
+                      </td>
+                      <td class="px-4 py-3">
+                        <span [class.text-red-500]="p.stock <= p.minStock" [class.text-gray-700]="p.stock > p.minStock" class="font-medium">{{ p.stock }}</span>
+                      </td>
+                      <td class="px-4 py-3 text-gray-600">{{ p.totalSales }}</td>
+                      <td class="px-4 py-3">
+                        <div class="flex gap-2">
+                          <button (click)="openProductForm(p)" class="text-xs px-3 py-1.5 border border-gray-200 rounded-lg hover:border-black transition-colors">Editar</button>
+                          <button (click)="deleteProduct(p.id)" class="text-xs px-3 py-1.5 border border-red-100 text-red-600 rounded-lg hover:border-red-400 transition-colors">Eliminar</button>
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @if (products().length === 0) {
+              <div class="text-center py-10 text-gray-400">No hay productos. ¡Crea el primero!</div>
+            }
+          </div>
+        }
+      }
+
+      <!-- ══════════ CATEGORÍAS ══════════ -->
+      @if (activeSection() === 'categorias') {
+        <h1 class="text-2xl font-bold text-black mb-6">Categorías</h1>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Formulario -->
+          <div class="bg-white rounded-2xl border border-gray-100 p-6">
+            <h2 class="font-bold text-gray-900 mb-4">{{ editingCategoryId() ? 'Editar' : 'Nueva' }} categoría</h2>
+            <div class="space-y-4">
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Nombre *</label>
+                <input #inpCatName type="text" [value]="categoryForm().name"
+                  (input)="setCategoryName(inpCatName.value)"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"/>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Slug *</label>
+                <input #inpCatSlug type="text" [value]="categoryForm().slug" (input)="updateCategoryForm('slug', inpCatSlug.value)"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-black"/>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Descripción</label>
+                <input #inpCatDesc type="text" [value]="categoryForm().description" (input)="updateCategoryForm('description', inpCatDesc.value)"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"/>
+              </div>
+              <div class="flex gap-3">
+                @if (editingCategoryId()) {
+                  <button (click)="editingCategoryId.set(null); categoryForm.set({name:'',description:'',slug:''})"
+                    class="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm">Cancelar</button>
+                }
+                <button (click)="saveCategory()" [disabled]="savingCategory()"
+                  class="flex-1 bg-black text-white py-2.5 rounded-xl text-sm font-medium disabled:opacity-50">
+                  {{ savingCategory() ? 'Guardando...' : (editingCategoryId() ? 'Actualizar' : 'Crear categoría') }}
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- Lista -->
+          <div class="bg-white rounded-2xl border border-gray-100 p-6">
+            <h2 class="font-bold text-gray-900 mb-4">Categorías existentes</h2>
+            <div class="space-y-2">
+              @for (cat of categories(); track cat.id) {
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                  <div>
+                    <p class="font-medium text-sm text-gray-900">{{ cat.name }}</p>
+                    <p class="text-xs text-gray-400 font-mono">{{ cat.slug }}</p>
+                  </div>
+                  <div class="flex gap-2">
+                    <button (click)="editCategory(cat)" class="text-xs px-3 py-1.5 border border-gray-200 rounded-lg hover:border-black transition-colors">Editar</button>
+                    <button (click)="deleteCategory(cat.id)" class="text-xs px-3 py-1.5 border border-red-100 text-red-600 rounded-lg hover:border-red-400 transition-colors">Eliminar</button>
+                  </div>
+                </div>
+              }
+              @if (categories().length === 0) {
+                <p class="text-sm text-gray-400 text-center py-4">No hay categorías</p>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- ══════════ USUARIOS ══════════ -->
+      @if (activeSection() === 'usuarios') {
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-2xl font-bold text-black">Usuarios</h1>
+          <select #selRoleFilter (change)="userRoleFilter.set(selRoleFilter.value); loadUsers()"
+            class="text-sm border border-gray-200 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black">
+            <option value="">Todos los roles</option>
+            <option value="CUSTOMER">Clientes</option>
+            <option value="DISTRIBUTOR">Distribuidores</option>
+            <option value="ADMIN">Admins</option>
+          </select>
+        </div>
+        @if (usersLoading()) {
+          <div class="text-center py-10 text-gray-400">Cargando usuarios...</div>
+        } @else {
+          <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Usuario</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Rol</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Descuento</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Saldo</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Estado</th>
+                    <th class="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                  @for (user of users(); track user.id) {
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-4 py-3">
+                        <p class="font-medium text-gray-900">{{ user.firstName }} {{ user.lastName }}</p>
+                        <p class="text-xs text-gray-400">{{ user.email }}</p>
+                      </td>
+                      <td class="px-4 py-3">
+                        @if (editingUserId() === user.id) {
+                          <select #selUserRole [value]="userEditForm().role" (change)="updateUserEditForm('role', selUserRole.value)"
+                            class="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none">
+                            <option value="CUSTOMER">Cliente</option>
+                            <option value="DISTRIBUTOR">Distribuidor</option>
+                          </select>
+                        } @else {
+                          <span class="text-xs px-2 py-1 rounded-full"
+                            [class.bg-blue-100]="user.role==='CUSTOMER'" [class.text-blue-700]="user.role==='CUSTOMER'"
+                            [class.bg-purple-100]="user.role==='DISTRIBUTOR'" [class.text-purple-700]="user.role==='DISTRIBUTOR'"
+                            [class.bg-red-100]="user.role==='ADMIN'" [class.text-red-700]="user.role==='ADMIN'">
+                            {{ user.role }}
+                          </span>
+                        }
+                      </td>
+                      <td class="px-4 py-3">
+                        @if (editingUserId() === user.id) {
+                          <input #inpDiscount type="number" min="0" max="100" [value]="userEditForm().defaultDiscount"
+                            (input)="updateUserEditForm('defaultDiscount', +inpDiscount.value)"
+                            class="w-20 text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none"/>
+                        } @else {
+                          <span class="text-sm">{{ user.defaultDiscount }}%</span>
+                        }
+                      </td>
+                      <td class="px-4 py-3 font-semibold text-green-600">${{ user.creditBalance | number:'1.2-2' }}</td>
+                      <td class="px-4 py-3">
+                        <span class="text-xs px-2 py-1 rounded-full"
+                          [class.bg-green-100]="user.isActive" [class.text-green-700]="user.isActive"
+                          [class.bg-gray-100]="!user.isActive" [class.text-gray-500]="!user.isActive">
+                          {{ user.isActive ? 'Activo' : 'Inactivo' }}
+                        </span>
+                      </td>
+                      <td class="px-4 py-3">
+                        <div class="flex flex-wrap gap-1.5">
+                          @if (editingUserId() === user.id) {
+                            <button (click)="saveUserEdit(user.id)" class="text-xs px-2.5 py-1 bg-black text-white rounded-lg">Guardar</button>
+                            <button (click)="editingUserId.set(null)" class="text-xs px-2.5 py-1 border border-gray-200 rounded-lg">Cancelar</button>
+                          } @else {
+                            <button (click)="startEditUser(user)" class="text-xs px-2.5 py-1 border border-gray-200 rounded-lg hover:border-black transition-colors">Editar</button>
+                            <button (click)="toggleUserActive(user)" class="text-xs px-2.5 py-1 border rounded-lg transition-colors"
+                              [class.border-red-200]="user.isActive" [class.text-red-600]="user.isActive"
+                              [class.border-green-200]="!user.isActive" [class.text-green-600]="!user.isActive">
+                              {{ user.isActive ? 'Desactivar' : 'Activar' }}
+                            </button>
+                            <button (click)="setCreditUserId(user.id)" class="text-xs px-2.5 py-1 border border-blue-100 text-blue-600 rounded-lg hover:border-blue-400 transition-colors">+ Crédito</button>
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @if (users().length === 0) {
+              <div class="text-center py-10 text-gray-400">No hay usuarios</div>
+            }
+          </div>
+        }
+      }
+
+      <!-- ══════════ CRÉDITOS ══════════ -->
+      @if (activeSection() === 'creditos') {
+        <h1 class="text-2xl font-bold text-black mb-6">Asignar Crédito / Cupo</h1>
+        <div class="max-w-2xl">
+          <div class="bg-white rounded-2xl border border-gray-100 p-6">
+            @if (creditSuccess()) {
+              <div class="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl mb-4">✓ {{ creditSuccess() }}</div>
+            }
+            @if (creditError()) {
+              <div class="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-4">{{ creditError() }}</div>
+            }
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Usuario *</label>
+                <select #selCreditUser [value]="creditForm().userId" (change)="updateCreditField('userId', selCreditUser.value)"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black">
+                  <option value="">Selecciona un usuario...</option>
+                  @for (u of users(); track u.id) {
+                    <option [value]="u.id">{{ u.firstName }} {{ u.lastName }} — {{ u.email }} (Saldo: ${{ u.creditBalance | number:'1.2-2' }})</option>
+                  }
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Tipo de transacción *</label>
+                <select #selTxType [value]="creditForm().transactionType" (change)="updateCreditField('transactionType', selTxType.value)"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black">
+                  <option value="TRANSFER">Transferencia</option>
+                  <option value="DEPOSIT">Depósito</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Código único de transacción *</label>
+                <input #inpTxCode type="text" [value]="creditForm().uniqueTransactionCode" (input)="updateCreditField('uniqueTransactionCode', inpTxCode.value)"
+                  placeholder="Ej: TRX-2024-001"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"/>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Banco de origen *</label>
+                <input #inpOriginBank type="text" [value]="creditForm().originBank" (input)="updateCreditField('originBank', inpOriginBank.value)"
+                  placeholder="Ej: Banco Pichincha"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"/>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Cuenta de origen *</label>
+                <input #inpOriginAcc type="text" [value]="creditForm().originAccount" (input)="updateCreditField('originAccount', inpOriginAcc.value)"
+                  placeholder="Número de cuenta"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"/>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Tipo cta. origen *</label>
+                <select #selOriginType [value]="creditForm().originAccountType" (change)="updateCreditField('originAccountType', selOriginType.value)"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black">
+                  <option value="CORRIENTE">Corriente</option>
+                  <option value="AHORROS">Ahorros</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Banco destino *</label>
+                <input #inpDestBank type="text" [value]="creditForm().destinationBank" (input)="updateCreditField('destinationBank', inpDestBank.value)"
+                  placeholder="Ej: Banco Guayaquil"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"/>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Cuenta destino *</label>
+                <input #inpDestAcc type="text" [value]="creditForm().destinationAccount" (input)="updateCreditField('destinationAccount', inpDestAcc.value)"
+                  placeholder="Número de cuenta"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"/>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Tipo cta. destino *</label>
+                <select #selDestType [value]="creditForm().destinationAccountType" (change)="updateCreditField('destinationAccountType', selDestType.value)"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black">
+                  <option value="CORRIENTE">Corriente</option>
+                  <option value="AHORROS">Ahorros</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Monto *</label>
+                <input #inpAmount type="number" min="0.01" step="0.01" [value]="creditForm().amount" (input)="updateCreditField('amount', +inpAmount.value)"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"/>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Fecha de transacción *</label>
+                <input #inpTxDate type="date" [value]="creditForm().transactionDate" (input)="updateCreditField('transactionDate', inpTxDate.value)"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"/>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-gray-600 mb-1">Referencia</label>
+                <input #inpRef type="text" [value]="creditForm().reference ?? ''" (input)="updateCreditField('reference', inpRef.value)"
+                  placeholder="Referencia interna"
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black"/>
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-medium text-gray-600 mb-1">Observaciones</label>
+                <textarea #inpObs rows="2" [value]="creditForm().observations ?? ''" (input)="updateCreditField('observations', inpObs.value)"
+                  placeholder="Notas adicionales sobre la transacción..."
+                  class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black resize-none"></textarea>
+              </div>
+            </div>
+            <button (click)="submitCredit()" [disabled]="savingCredit() || !creditForm().userId || !creditForm().amount"
+              class="w-full mt-5 bg-black text-white py-3 rounded-xl font-semibold text-sm hover:bg-gray-800 transition-colors disabled:opacity-50">
+              {{ savingCredit() ? 'Asignando...' : 'Asignar crédito' }}
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- ══════════ REPORTES ══════════ -->
+      @if (activeSection() === 'reportes') {
+        <h1 class="text-2xl font-bold text-black mb-6">Reportes</h1>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Mejores vendedores -->
+          <div class="bg-white rounded-2xl border border-gray-100 p-6">
+            <h2 class="font-bold text-gray-900 mb-4">🏆 Productos más vendidos</h2>
+            @if (bestSellers().length === 0) {
+              <p class="text-sm text-gray-400 text-center py-6">Sin datos aún</p>
+            } @else {
+              <div class="space-y-3">
+                @for (item of bestSellers(); track item.productId; let idx = $index) {
+                  <div class="flex items-center gap-3">
+                    <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                      [class.bg-yellow-400]="idx===0" [class.bg-gray-200]="idx===1" [class.bg-amber-600]="idx===2" [class.bg-gray-100]="idx>2"
+                      [class.text-white]="idx>=2">{{ idx + 1 }}</span>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-gray-900 truncate">{{ item.name }}</p>
+                      <p class="text-xs text-gray-400">{{ item.totalSold }} vendidos</p>
+                    </div>
+                    <span class="text-sm font-semibold text-gray-900">${{ item.revenue | number:'1.2-2' }}</span>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+          <!-- Ingresos por periodo -->
+          <div class="bg-white rounded-2xl border border-gray-100 p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="font-bold text-gray-900">📊 Ingresos por período</h2>
+              <div class="flex gap-1">
+                @for (p of [['day','Día'],['week','Semana'],['month','Mes']]; track p[0]) {
+                  <button (click)="changeRevenuePeriod(p[0])"
+                    class="text-xs px-3 py-1 rounded-lg transition-colors"
+                    [class.bg-black]="revenuePeriod()===p[0]" [class.text-white]="revenuePeriod()===p[0]"
+                    [class.bg-gray-100]="revenuePeriod()!==p[0]" [class.text-gray-600]="revenuePeriod()!==p[0]">
+                    {{ p[1] }}
+                  </button>
+                }
+              </div>
+            </div>
+            @if (revenueData().length === 0) {
+              <p class="text-sm text-gray-400 text-center py-6">Sin datos aún</p>
+            } @else {
+              <div class="space-y-2 max-h-64 overflow-y-auto">
+                @for (row of revenueData(); track row.period) {
+                  <div class="flex items-center justify-between py-2 border-b border-gray-50">
+                    <span class="text-sm text-gray-600">{{ row.period }}</span>
+                    <div class="text-right">
+                      <p class="text-sm font-semibold text-gray-900">${{ row.revenue | number:'1.2-2' }}</p>
+                      <p class="text-xs text-gray-400">{{ row.orders }} pedidos</p>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+          <!-- Stock bajo -->
+          <div class="bg-white rounded-2xl border border-gray-100 p-6 lg:col-span-2">
+            <h2 class="font-bold text-gray-900 mb-4">⚠ Alertas de stock bajo</h2>
+            @if (stockAlerts().length === 0) {
+              <p class="text-sm text-green-600 font-medium">✓ Todo el stock está en niveles normales</p>
+            } @else {
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead><tr class="border-b border-gray-100">
+                    <th class="text-left py-2 text-xs font-semibold text-gray-500">Producto</th>
+                    <th class="text-left py-2 text-xs font-semibold text-gray-500">SKU</th>
+                    <th class="text-left py-2 text-xs font-semibold text-gray-500">Stock actual</th>
+                    <th class="text-left py-2 text-xs font-semibold text-gray-500">Mínimo</th>
+                  </tr></thead>
+                  <tbody>
+                    @for (a of stockAlerts(); track a.id) {
+                      <tr class="border-b border-gray-50">
+                        <td class="py-2 font-medium text-gray-900">{{ a.name }}</td>
+                        <td class="py-2 font-mono text-xs text-gray-500">{{ a.sku }}</td>
+                        <td class="py-2"><span class="text-orange-500 font-bold">{{ a.stock }}</span></td>
+                        <td class="py-2 text-gray-500">{{ a.minStock }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+    </div>
+  </main>
+</div>

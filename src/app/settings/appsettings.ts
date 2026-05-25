@@ -1,7 +1,7 @@
 export const appsettings = {
-  appName: 'Credit Platform API',
+  appName: 'E-Commerce API',
   appVersion: '1.0.0',
-  apiUrl: 'http://localhost:5064/api'
-  //apiUrl: 'https://localhost:7068/api'
-
-}
+  apiUrl: 'http://localhost:3000/api',
+  wsUrl: 'http://localhost:3000',
+  whatsappNumber: '+593959436758',
+};

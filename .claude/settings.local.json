@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/User/Documents/ProyectosAngular/**)",
+      "Bash(dir \"C:\\\\Users\\\\User\\\\Documents\\\\ProyectosAngular\")",
+      "Bash(nest new *)"
+    ]
+  }
+}

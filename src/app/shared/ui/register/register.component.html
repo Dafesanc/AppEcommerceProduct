@@ -251,6 +251,45 @@
         </div>
       </div>
 
+      <!-- Tipo de cuenta -->
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-3">
+          Tipo de cuenta
+        </label>
+        <div class="grid grid-cols-2 gap-3">
+          <label
+            class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200"
+            [class.border-black]="formRegister.get('role')?.value === 'CUSTOMER'"
+            [class.bg-black]="formRegister.get('role')?.value === 'CUSTOMER'"
+            [class.text-white]="formRegister.get('role')?.value === 'CUSTOMER'"
+            [class.border-gray-200]="formRegister.get('role')?.value !== 'CUSTOMER'"
+            [class.text-gray-700]="formRegister.get('role')?.value !== 'CUSTOMER'">
+            <input type="radio" formControlName="role" value="CUSTOMER" class="hidden">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+            </svg>
+            <span class="text-sm font-semibold">Cliente</span>
+            <span class="text-xs opacity-70 text-center">Compra productos</span>
+          </label>
+
+          <label
+            class="flex flex-col items-center gap-2 p-4 rounded-xl border-2 cursor-pointer transition-all duration-200"
+            [class.border-black]="formRegister.get('role')?.value === 'DISTRIBUTOR'"
+            [class.bg-black]="formRegister.get('role')?.value === 'DISTRIBUTOR'"
+            [class.text-white]="formRegister.get('role')?.value === 'DISTRIBUTOR'"
+            [class.border-gray-200]="formRegister.get('role')?.value !== 'DISTRIBUTOR'"
+            [class.text-gray-700]="formRegister.get('role')?.value !== 'DISTRIBUTOR'">
+            <input type="radio" formControlName="role" value="DISTRIBUTOR" class="hidden">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"/>
+              <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1v-1h3.05a2.5 2.5 0 014.9 0H19a1 1 0 001-1v-5a1 1 0 00-.293-.707l-3-3A1 1 0 0016 5h-3V4a1 1 0 00-1-1H3z"/>
+            </svg>
+            <span class="text-sm font-semibold">Distribuidor</span>
+            <span class="text-xs opacity-70 text-center">Accede a precios especiales</span>
+          </label>
+        </div>
+      </div>
+
       <!-- Submit Button -->
       <button
         type="submit"

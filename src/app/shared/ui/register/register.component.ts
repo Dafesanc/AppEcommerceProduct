@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators, FormGroup, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { RegisterRequest } from '../../../models/auth.models';
 
 interface Country {
   name: string;
@@ -25,19 +27,17 @@ export class RegisterComponent implements OnInit {
   showConfirmPassword = false;
 
   countries: Country[] = [
+    { name: 'Ecuador', code: 'EC', prefix: '+593', flag: '🇪🇨' },
     { name: 'Colombia', code: 'CO', prefix: '+57', flag: '🇨🇴' },
     { name: 'México', code: 'MX', prefix: '+52', flag: '🇲🇽' },
     { name: 'Argentina', code: 'AR', prefix: '+54', flag: '🇦🇷' },
     { name: 'Chile', code: 'CL', prefix: '+56', flag: '🇨🇱' },
     { name: 'Perú', code: 'PE', prefix: '+51', flag: '🇵🇪' },
     { name: 'Venezuela', code: 'VE', prefix: '+58', flag: '🇻🇪' },
-    { name: 'Ecuador', code: 'EC', prefix: '+593', flag: '🇪🇨' },
     { name: 'España', code: 'ES', prefix: '+34', flag: '🇪🇸' },
     { name: 'USA', code: 'US', prefix: '+1', flag: '🇺🇸' },
-    { name: 'Canadá', code: 'CA', prefix: '+1', flag: '🇨🇦' }
   ];
 
-  // Focus tracking
   firstNameFocused = false;
   lastNameFocused = false;
   emailFocused = false;
@@ -47,6 +47,7 @@ export class RegisterComponent implements OnInit {
 
   private router = inject(Router);
   private formBuilder = inject(FormBuilder);
+  private authService = inject(AuthService);
 
   ngOnInit(): void {
     this.formRegister = this.formBuilder.group({
@@ -56,68 +57,61 @@ export class RegisterComponent implements OnInit {
       password: ['', [Validators.required, Validators.minLength(8)]],
       confirmPassword: ['', Validators.required],
       country: [this.countries[0], Validators.required],
-      phone: ['', [Validators.required, Validators.pattern(/^\d{7,15}$/)]]
+      phone: ['', [Validators.required, Validators.pattern(/^\d{7,15}$/)]],
+      role: ['CUSTOMER', Validators.required]
     }, { validators: this.passwordMatchValidator });
   }
 
-  // Custom validator for password matching
   passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
     const password = control.get('password');
     const confirmPassword = control.get('confirmPassword');
-
-    if (!password || !confirmPassword) {
-      return null;
-    }
-
+    if (!password || !confirmPassword) return null;
     return password.value === confirmPassword.value ? null : { passwordMismatch: true };
   }
 
-  registrarse() {
+  registrarse(): void {
     if (this.formRegister.invalid) {
       this.formRegister.markAllAsTouched();
       this.errorMessage = 'Por favor, completa todos los campos correctamente';
       return;
     }
 
-    const phoneWithPrefix = this.formRegister.value.country.prefix + this.formRegister.value.phone;
-
-    const registrationData = {
+    const phone = this.formRegister.value.country.prefix + this.formRegister.value.phone;
+    const data: RegisterRequest = {
       firstName: this.formRegister.value.firstName,
       lastName: this.formRegister.value.lastName,
       email: this.formRegister.value.email,
       password: this.formRegister.value.password,
-      phone: phoneWithPrefix
+      phone,
+      role: this.formRegister.value.role
     };
 
     this.loading = true;
     this.errorMessage = '';
     this.successMessage = '';
 
-    // Simular registro exitoso
-    setTimeout(() => {
-      this.loading = false;
-      this.successMessage = '¡Registro exitoso! Redirigiendo al inicio de sesión...';
-      setTimeout(() => {
-        this.router.navigate(['/login']);
-      }, 2000);
-    }, 1500);
-
-    console.log('Datos de registro:', registrationData);
+    this.authService.register(data).subscribe({
+      next: () => {
+        this.successMessage = '¡Registro exitoso! Redirigiendo...';
+        setTimeout(() => this.router.navigate(['/home']), 1500);
+      },
+      error: (error) => {
+        this.errorMessage = error.error?.message || 'Error al registrarse. Intenta de nuevo.';
+        this.loading = false;
+      },
+      complete: () => {
+        this.loading = false;
+      }
+    });
   }
 
-  switchToLogin() {
+  switchToLogin(): void {
     this.router.navigate(['/login']);
   }
 
-  togglePassword() {
-    this.showPassword = !this.showPassword;
-  }
+  togglePassword(): void { this.showPassword = !this.showPassword; }
+  toggleConfirmPassword(): void { this.showConfirmPassword = !this.showConfirmPassword; }
 
-  toggleConfirmPassword() {
-    this.showConfirmPassword = !this.showConfirmPassword;
-  }
-
-  // Convenience getters
   get firstNameControl() { return this.formRegister.get('firstName'); }
   get lastNameControl() { return this.formRegister.get('lastName'); }
   get emailControl() { return this.formRegister.get('email'); }
@@ -126,21 +120,11 @@ export class RegisterComponent implements OnInit {
   get phoneControl() { return this.formRegister.get('phone'); }
   get countryControl() { return this.formRegister.get('country'); }
 
-  onFieldFocus(field: string) {
-    if (field === 'firstName') this.firstNameFocused = true;
-    if (field === 'lastName') this.lastNameFocused = true;
-    if (field === 'email') this.emailFocused = true;
-    if (field === 'password') this.passwordFocused = true;
-    if (field === 'confirmPassword') this.confirmPasswordFocused = true;
-    if (field === 'phone') this.phoneFocused = true;
+  onFieldFocus(field: string): void {
+    (this as any)[`${field}Focused`] = true;
   }
 
-  onFieldBlur(field: string) {
-    if (field === 'firstName') this.firstNameFocused = false;
-    if (field === 'lastName') this.lastNameFocused = false;
-    if (field === 'email') this.emailFocused = false;
-    if (field === 'password') this.passwordFocused = false;
-    if (field === 'confirmPassword') this.confirmPasswordFocused = false;
-    if (field === 'phone') this.phoneFocused = false;
+  onFieldBlur(field: string): void {
+    (this as any)[`${field}Focused`] = false;
   }
 }

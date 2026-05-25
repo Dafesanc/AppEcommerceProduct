@@ -1,16 +1,57 @@
-import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink, Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { CartService } from '../../services/cart.service';
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink],
+  imports: [CommonModule, RouterLink],
   templateUrl: './header.component.html',
   styleUrl: './header.component.css'
 })
-export class HeaderComponent {
-  isMenuOpen = false;
+export class HeaderComponent implements OnInit {
+  readonly auth = inject(AuthService);
+  readonly cart = inject(CartService);
+  private router = inject(Router);
 
-  toggleMenu() {
-    this.isMenuOpen = !this.isMenuOpen;
+  isMenuOpen = signal(false);
+  isUserMenuOpen = signal(false);
+
+  ngOnInit(): void {
+    if (this.auth.isAuthenticated()) {
+      this.cart.load();
+    }
+  }
+
+  toggleMenu(): void {
+    this.isMenuOpen.update(v => !v);
+  }
+
+  toggleUserMenu(): void {
+    this.isUserMenuOpen.update(v => !v);
+  }
+
+  closeUserMenu(): void {
+    this.isUserMenuOpen.set(false);
+  }
+
+  goToCart(): void {
+    if (!this.auth.isAuthenticated()) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.router.navigate(['/carrito']);
+  }
+
+  logout(): void {
+    this.cart.clear();
+    this.auth.logout();
+    this.isUserMenuOpen.set(false);
+  }
+
+  get userName(): string {
+    const u = this.auth.currentUser();
+    return u ? u.firstName : '';
   }
 }

@@ -1,0 +1,213 @@
+<div class="min-h-screen bg-white">
+
+  <!-- Toast -->
+  @if (toastMessage()) {
+    <div class="fixed top-20 right-4 z-50 bg-black text-white text-sm px-5 py-3 rounded-xl shadow-lg">
+      ✓ {{ toastMessage() }}
+    </div>
+  }
+
+  <!-- Skeleton -->
+  @if (loading()) {
+    <div class="max-w-6xl mx-auto px-4 py-10">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div class="bg-gray-100 animate-pulse rounded-2xl h-96"></div>
+        <div class="space-y-4 pt-6">
+          <div class="bg-gray-100 animate-pulse h-5 rounded w-1/3"></div>
+          <div class="bg-gray-100 animate-pulse h-8 rounded w-3/4"></div>
+          <div class="bg-gray-100 animate-pulse h-6 rounded w-1/4"></div>
+          <div class="bg-gray-100 animate-pulse h-20 rounded"></div>
+          <div class="bg-gray-100 animate-pulse h-12 rounded"></div>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (!loading() && product()) {
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+      <!-- Breadcrumb -->
+      <nav class="flex items-center gap-2 text-sm text-gray-400 mb-8">
+        <button (click)="goBack()" class="hover:text-black transition-colors">Catálogo</button>
+        <span>/</span>
+        <span class="text-gray-600">{{ product()!.category?.name }}</span>
+        <span>/</span>
+        <span class="text-black font-medium truncate max-w-xs">{{ product()!.name }}</span>
+      </nav>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+
+        <!-- Galería de imágenes -->
+        <div class="space-y-4">
+          <!-- Imagen principal -->
+          <div class="bg-gray-50 rounded-2xl overflow-hidden aspect-square flex items-center justify-center p-8">
+            @if (selectedImage()) {
+              <img
+                [src]="selectedImage()"
+                [alt]="product()!.name"
+                class="w-full h-full object-contain transition-all duration-300"/>
+            } @else {
+              <div class="text-gray-300">
+                <svg class="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </div>
+            }
+          </div>
+
+          <!-- Thumbnails -->
+          @if (product()!.images.length > 1) {
+            <div class="flex gap-2 overflow-x-auto pb-1">
+              @for (img of product()!.images; track img.id) {
+                <button
+                  (click)="selectImage(img)"
+                  class="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-colors"
+                  [class.border-black]="selectedImage() === img.url"
+                  [class.border-transparent]="selectedImage() !== img.url">
+                  <img [src]="img.url" [alt]="product()!.name" class="w-full h-full object-contain p-1"/>
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Información del producto -->
+        <div class="lg:pt-4">
+          <!-- Categoría + badges -->
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-sm text-gray-500">{{ product()!.category?.name }}</span>
+            @if (product()!.isPromotional) {
+              <span class="bg-red-100 text-red-600 text-xs font-semibold px-2 py-0.5 rounded-full">Oferta</span>
+            }
+            @if (product()!.isFeatured) {
+              <span class="bg-yellow-100 text-yellow-700 text-xs font-semibold px-2 py-0.5 rounded-full">⭐ Destacado</span>
+            }
+          </div>
+
+          <!-- Nombre -->
+          <h1 class="text-2xl sm:text-3xl font-bold text-black mb-4 leading-tight">{{ product()!.name }}</h1>
+
+          <!-- Rating -->
+          @if (product()!.ratingCount > 0) {
+            <div class="flex items-center gap-2 mb-4">
+              <div class="flex items-center gap-0.5">
+                @for (star of getStars(product()!.averageRating); track $index) {
+                  <svg class="w-4 h-4" [class.text-yellow-400]="star.full" [class.text-gray-200]="!star.full" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                  </svg>
+                }
+              </div>
+              <span class="text-sm text-gray-500">{{ product()!.averageRating | number:'1.1-1' }} ({{ product()!.ratingCount }} reseñas)</span>
+            </div>
+          }
+
+          <!-- Precio -->
+          <div class="flex items-baseline gap-3 mb-2">
+            <span class="text-3xl font-bold" [class.text-red-500]="product()!.promotionalPrice" [class.text-black]="!product()!.promotionalPrice">
+              ${{ (product()!.promotionalPrice ?? product()!.price) | number:'1.2-2' }}
+            </span>
+            @if (product()!.promotionalPrice) {
+              <span class="text-lg text-gray-400 line-through">${{ product()!.price | number:'1.2-2' }}</span>
+              <span class="bg-red-100 text-red-600 text-sm font-bold px-2 py-0.5 rounded-full">-{{ getDiscount() }}%</span>
+            }
+          </div>
+
+          <!-- Stock -->
+          <div class="mb-6">
+            @if (product()!.stock > product()!.minStock) {
+              <span class="text-green-600 text-sm font-medium">✓ En stock ({{ product()!.stock }} disponibles)</span>
+            } @else if (product()!.stock > 0) {
+              <span class="text-orange-500 text-sm font-medium">⚠ Últimas {{ product()!.stock }} unidades</span>
+            } @else {
+              <span class="text-red-500 text-sm font-medium">✗ Sin stock</span>
+            }
+          </div>
+
+          <!-- Descripción corta -->
+          @if (product()!.shortDescription) {
+            <p class="text-gray-600 mb-6 leading-relaxed">{{ product()!.shortDescription }}</p>
+          }
+
+          <!-- Cantidad -->
+          @if (product()!.stock > 0) {
+            <div class="flex items-center gap-4 mb-6">
+              <span class="text-sm font-medium text-gray-700">Cantidad:</span>
+              <div class="flex items-center border border-gray-200 rounded-xl overflow-hidden">
+                <button
+                  (click)="decrementQty()"
+                  [disabled]="quantity() === 1"
+                  class="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                  −
+                </button>
+                <span class="w-10 text-center text-sm font-medium">{{ quantity() }}</span>
+                <button
+                  (click)="incrementQty()"
+                  [disabled]="quantity() >= product()!.stock"
+                  class="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                  +
+                </button>
+              </div>
+            </div>
+          }
+
+          <!-- Botones acción -->
+          <div class="flex flex-col sm:flex-row gap-3 mb-8">
+            <button
+              (click)="addToCart()"
+              [disabled]="product()!.stock === 0 || addingToCart()"
+              class="flex-1 py-3 rounded-2xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              [class.bg-black]="product()!.stock > 0"
+              [class.text-white]="product()!.stock > 0"
+              [class.hover:bg-gray-800]="product()!.stock > 0"
+              [class.bg-gray-100]="product()!.stock === 0"
+              [class.text-gray-400]="product()!.stock === 0">
+              @if (addingToCart()) {
+                <span class="flex items-center justify-center gap-2">
+                  <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  Agregando...
+                </span>
+              } @else {
+                {{ product()!.stock === 0 ? 'Sin stock' : 'Agregar al carrito' }}
+              }
+            </button>
+
+            <button
+              (click)="openWhatsApp()"
+              class="flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border border-gray-200 hover:border-green-400 hover:text-green-600 font-semibold text-sm transition-all">
+              <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                <path d="M12 0C5.373 0 0 5.373 0 12c0 2.113.544 4.1 1.497 5.836L.057 23.716a.75.75 0 00.947.899l5.947-1.504A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.88 0-3.645-.498-5.176-1.372l-.37-.217-3.83.968.99-3.762-.24-.389A9.961 9.961 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+              </svg>
+              Consultar por WhatsApp
+            </button>
+          </div>
+
+          <!-- SKU -->
+          <p class="text-xs text-gray-400">SKU: {{ product()!.sku }}</p>
+        </div>
+      </div>
+
+      <!-- Descripción completa -->
+      <div class="mt-16 border-t border-gray-100 pt-12">
+        <h2 class="text-xl font-bold text-black mb-6">Descripción</h2>
+        <div class="prose prose-gray max-w-none text-gray-600 leading-relaxed whitespace-pre-line">
+          {{ product()!.description }}
+        </div>
+      </div>
+
+    </div>
+  }
+</div>
+
+<!-- WhatsApp flotante -->
+<button
+  (click)="openWhatsApp()"
+  class="fixed bottom-6 right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110">
+  <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.113.544 4.1 1.497 5.836L.057 23.716a.75.75 0 00.947.899l5.947-1.504A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.88 0-3.645-.498-5.176-1.372l-.37-.217-3.83.968.99-3.762-.24-.389A9.961 9.961 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+  </svg>
+</button>

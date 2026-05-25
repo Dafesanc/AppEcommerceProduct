@@ -1,0 +1,279 @@
+<div class="min-h-screen bg-gray-50">
+
+  <!-- Toast -->
+  @if (toastMessage()) {
+    <div class="fixed top-20 right-4 z-50 bg-black text-white text-sm px-5 py-3 rounded-xl shadow-lg animate-fade-in-up">
+      ✓ {{ toastMessage() }}
+    </div>
+  }
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Header barra -->
+    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-black">Catálogo</h1>
+      <div class="flex items-center gap-3 w-full sm:w-auto">
+        <!-- Búsqueda -->
+        <div class="relative flex-1 sm:w-72">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+          </svg>
+          <input #inpSearch
+            type="text"
+            placeholder="Buscar productos..."
+            [value]="search()"
+            (input)="onSearch(inpSearch.value)"
+            class="w-full pl-9 pr-4 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"/>
+        </div>
+        <!-- Ordenar -->
+        <select #selSort
+          [value]="sortBy()"
+          (change)="changeSort(selSort.value)"
+          class="px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-black cursor-pointer">
+          <option value="totalSales">Más vendidos</option>
+          <option value="price">Precio</option>
+          <option value="averageRating">Mejor calificados</option>
+          <option value="createdAt">Más nuevos</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flex gap-6">
+
+      <!-- Sidebar filtros -->
+      <aside class="hidden lg:block w-56 flex-shrink-0">
+        <div class="bg-white rounded-2xl border border-gray-100 p-5 sticky top-20">
+          <h3 class="font-semibold text-gray-900 mb-4">Filtros</h3>
+
+          <!-- Categorías -->
+          <div class="mb-6">
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Categoría</p>
+            <button
+              (click)="selectCategory('')"
+              class="w-full text-left text-sm px-3 py-2 rounded-lg mb-1 transition-colors"
+              [class.bg-black]="selectedCategory() === ''"
+              [class.text-white]="selectedCategory() === ''"
+              [class.text-gray-700]="selectedCategory() !== ''">
+              Todas
+            </button>
+            @for (cat of categories(); track trackByCat($index, cat)) {
+              <button
+                (click)="selectCategory(cat.id)"
+                class="w-full text-left text-sm px-3 py-2 rounded-lg mb-1 transition-colors"
+                [class.bg-black]="selectedCategory() === cat.id"
+                [class.text-white]="selectedCategory() === cat.id"
+                [class.text-gray-700]="selectedCategory() !== cat.id">
+                {{ cat.name }}
+              </button>
+            }
+          </div>
+
+          <!-- Ofertas -->
+          <div>
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Promociones</p>
+            <label class="flex items-center gap-3 cursor-pointer">
+              <div
+                (click)="togglePromos()"
+                class="relative w-10 h-6 rounded-full transition-colors cursor-pointer"
+                [class.bg-black]="showPromos()"
+                [class.bg-gray-200]="!showPromos()">
+                <div class="absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform"
+                     [class.translate-x-4]="showPromos()"></div>
+              </div>
+              <span class="text-sm text-gray-700">Solo ofertas</span>
+            </label>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Grid de productos -->
+      <div class="flex-1">
+
+        <!-- Filtros mobile (pills) -->
+        <div class="lg:hidden flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-hide">
+          <button
+            (click)="selectCategory('')"
+            class="flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+            [class.bg-black]="selectedCategory() === ''"
+            [class.text-white]="selectedCategory() === ''"
+            [class.border]="selectedCategory() !== ''"
+            [class.border-gray-200]="selectedCategory() !== ''"
+            [class.text-gray-700]="selectedCategory() !== ''">
+            Todas
+          </button>
+          @for (cat of categories(); track trackByCat($index, cat)) {
+            <button
+              (click)="selectCategory(cat.id)"
+              class="flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors"
+              [class.bg-black]="selectedCategory() === cat.id"
+              [class.text-white]="selectedCategory() === cat.id"
+              [class.border]="selectedCategory() !== cat.id"
+              [class.border-gray-200]="selectedCategory() !== cat.id"
+              [class.text-gray-700]="selectedCategory() !== cat.id">
+              {{ cat.name }}
+            </button>
+          }
+        </div>
+
+        <!-- Resultado info -->
+        <p class="text-sm text-gray-500 mb-4">
+          {{ total() }} producto{{ total() !== 1 ? 's' : '' }} encontrado{{ total() !== 1 ? 's' : '' }}
+        </p>
+
+        <!-- Skeletons -->
+        @if (loading()) {
+          <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+            @for (i of [1,2,3,4,5,6,7,8]; track i) {
+              <div class="bg-white rounded-2xl overflow-hidden border border-gray-100">
+                <div class="bg-gray-100 animate-pulse h-44"></div>
+                <div class="p-3 space-y-2">
+                  <div class="bg-gray-100 animate-pulse h-3 rounded w-3/4"></div>
+                  <div class="bg-gray-100 animate-pulse h-3 rounded w-1/2"></div>
+                </div>
+              </div>
+            }
+          </div>
+        }
+
+        <!-- Productos -->
+        @if (!loading() && products().length > 0) {
+          <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+            @for (product of products(); track trackById($index, product)) {
+              <div
+                class="group relative bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+                (click)="goToProduct(product.id)">
+
+                <!-- Badges -->
+                @if (getDiscount(product) > 0) {
+                  <div class="absolute top-2 left-2 z-10 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    -{{ getDiscount(product) }}%
+                  </div>
+                }
+                @if (product.stock <= product.minStock && product.stock > 0) {
+                  <div class="absolute top-2 right-2 z-10 bg-orange-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    Últimas unidades
+                  </div>
+                }
+                @if (product.stock === 0) {
+                  <div class="absolute top-2 right-2 z-10 bg-gray-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    Sin stock
+                  </div>
+                }
+
+                <!-- Imagen -->
+                <div class="relative bg-gray-50 h-44 overflow-hidden">
+                  <img
+                    [src]="getMainImage(product)"
+                    [alt]="product.name"
+                    class="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"/>
+                </div>
+
+                <!-- Info -->
+                <div class="p-3">
+                  <p class="text-[10px] text-gray-400 mb-0.5">{{ product.category?.name }}</p>
+                  <h3 class="text-sm font-medium text-gray-900 line-clamp-2 mb-2 leading-snug">{{ product.name }}</h3>
+
+                  <!-- Precio -->
+                  <div class="flex items-baseline gap-1.5 mb-3">
+                    <span class="font-bold text-gray-900">${{ (product.promotionalPrice ?? product.price) | number:'1.2-2' }}</span>
+                    @if (product.promotionalPrice) {
+                      <span class="text-xs text-gray-400 line-through">${{ product.price | number:'1.2-2' }}</span>
+                    }
+                  </div>
+
+                  <!-- Acciones -->
+                  <div class="flex gap-1.5" (click)="$event.stopPropagation()">
+                    <button
+                      class="flex-1 text-xs py-2 rounded-xl font-medium transition-colors"
+                      [class.bg-black]="product.stock > 0"
+                      [class.text-white]="product.stock > 0"
+                      [class.hover:bg-gray-800]="product.stock > 0"
+                      [class.bg-gray-100]="product.stock === 0"
+                      [class.text-gray-400]="product.stock === 0"
+                      [class.cursor-not-allowed]="product.stock === 0"
+                      [disabled]="product.stock === 0 || addingToCart() === product.id"
+                      (click)="addToCart(product, $event)">
+                      @if (addingToCart() === product.id) {
+                        <span class="flex items-center justify-center gap-1">
+                          <svg class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                          </svg>
+                        </span>
+                      } @else {
+                        {{ product.stock === 0 ? 'Sin stock' : 'Agregar' }}
+                      }
+                    </button>
+                    <button
+                      class="p-2 rounded-xl border border-gray-200 hover:border-green-400 hover:text-green-500 transition-colors"
+                      (click)="openWhatsApp(product, $event)"
+                      title="WhatsApp">
+                      <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                        <path d="M12 0C5.373 0 0 5.373 0 12c0 2.113.544 4.1 1.497 5.836L.057 23.716a.75.75 0 00.947.899l5.947-1.504A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.88 0-3.645-.498-5.176-1.372l-.37-.217-3.83.968.99-3.762-.24-.389A9.961 9.961 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+          </div>
+
+          <!-- Paginación -->
+          @if (totalPages() > 1) {
+            <div class="flex items-center justify-center gap-2 mt-10">
+              <button
+                (click)="goToPage(page() - 1)"
+                [disabled]="page() === 1"
+                class="px-3 py-2 rounded-xl border border-gray-200 text-sm disabled:opacity-40 hover:border-black transition-colors">
+                ←
+              </button>
+              @for (p of pages; track p) {
+                <button
+                  (click)="goToPage(p)"
+                  class="w-9 h-9 rounded-xl text-sm font-medium transition-colors"
+                  [class.bg-black]="p === page()"
+                  [class.text-white]="p === page()"
+                  [class.border]="p !== page()"
+                  [class.border-gray-200]="p !== page()"
+                  [class.hover:border-black]="p !== page()">
+                  {{ p }}
+                </button>
+              }
+              <button
+                (click)="goToPage(page() + 1)"
+                [disabled]="page() === totalPages()"
+                class="px-3 py-2 rounded-xl border border-gray-200 text-sm disabled:opacity-40 hover:border-black transition-colors">
+                →
+              </button>
+            </div>
+          }
+        }
+
+        <!-- Empty state -->
+        @if (!loading() && products().length === 0) {
+          <div class="text-center py-20">
+            <div class="w-16 h-16 bg-gray-100 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+              </svg>
+            </div>
+            <p class="text-gray-500 font-medium">No se encontraron productos</p>
+            <button (click)="onSearch(''); selectCategory('')" class="mt-4 text-sm text-black underline">Limpiar filtros</button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- WhatsApp flotante -->
+<button
+  (click)="openWhatsAppGeneral()"
+  class="fixed bottom-6 right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110">
+  <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.113.544 4.1 1.497 5.836L.057 23.716a.75.75 0 00.947.899l5.947-1.504A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.88 0-3.645-.498-5.176-1.372l-.37-.217-3.83.968.99-3.762-.24-.389A9.961 9.961 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+  </svg>
+</button>
