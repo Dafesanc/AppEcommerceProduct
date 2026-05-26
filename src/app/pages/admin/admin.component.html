@@ -16,14 +16,19 @@
       <nav class="space-y-1">
         @for (item of NAV_ITEMS; track item.id) {
           <button
-            (click)="goTo(item.id)"
+            (click)="item.id === 'pedidos' ? goToPedidos() : goTo(item.id)"
             class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left"
             [class.bg-black]="activeSection() === item.id"
             [class.text-white]="activeSection() === item.id"
             [class.text-gray-600]="activeSection() !== item.id"
             [class.hover:bg-gray-50]="activeSection() !== item.id">
             <span>{{ item.icon }}</span>
-            <span>{{ item.label }}</span>
+            <span class="flex-1">{{ item.label }}</span>
+            @if (item.id === 'pedidos' && newOrdersBadge() > 0) {
+              <span class="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                {{ newOrdersBadge() }}
+              </span>
+            }
           </button>
         }
       </nav>
@@ -37,12 +42,17 @@
       <!-- Mobile nav -->
       <div class="lg:hidden flex gap-2 overflow-x-auto pb-3 mb-6 scrollbar-hide">
         @for (item of NAV_ITEMS; track item.id) {
-          <button (click)="goTo(item.id)"
-            class="flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-colors"
+          <button (click)="item.id === 'pedidos' ? goToPedidos() : goTo(item.id)"
+            class="flex-shrink-0 px-4 py-2 rounded-full text-xs font-medium transition-colors relative"
             [class.bg-black]="activeSection()===item.id" [class.text-white]="activeSection()===item.id"
             [class.bg-white]="activeSection()!==item.id" [class.text-gray-600]="activeSection()!==item.id"
             [class.border]="activeSection()!==item.id" [class.border-gray-200]="activeSection()!==item.id">
             {{ item.label }}
+            @if (item.id === 'pedidos' && newOrdersBadge() > 0) {
+              <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                {{ newOrdersBadge() }}
+              </span>
+            }
           </button>
         }
       </div>

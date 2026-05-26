@@ -213,74 +213,96 @@
       @if (activeTab() === 'credito') {
         <div class="space-y-4">
 
-          <!-- Balance card -->
-          <div class="bg-black text-white rounded-2xl p-6 flex items-center justify-between">
-            <div>
-              <p class="text-sm text-gray-400 mb-1">Saldo disponible</p>
-              <p class="text-3xl font-bold">${{ user.creditBalance | number:'1.2-2' }}</p>
+          <!-- Resumen cards -->
+          <div class="grid grid-cols-3 gap-3">
+            <div class="bg-black text-white rounded-2xl p-4">
+              <p class="text-xs text-gray-400 mb-1">Saldo disponible</p>
+              <p class="text-xl font-bold">${{ user.creditBalance | number:'1.2-2' }}</p>
             </div>
-            <div class="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center">
-              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-              </svg>
+            <div class="bg-white rounded-2xl border border-gray-100 p-4">
+              <p class="text-xs text-gray-400 mb-1">Total gastado</p>
+              <p class="text-xl font-bold text-red-600">-${{ totalSpent() | number:'1.2-2' }}</p>
+            </div>
+            <div class="bg-white rounded-2xl border border-gray-100 p-4">
+              <p class="text-xs text-gray-400 mb-1">Saldo recibido</p>
+              <p class="text-xl font-bold text-green-600">+${{ totalCredited() | number:'1.2-2' }}</p>
             </div>
           </div>
 
-          <!-- Historial -->
+          <!-- Timeline de movimientos -->
           <div class="bg-white rounded-2xl border border-gray-100 p-6">
             <h3 class="font-semibold text-gray-900 mb-4">Movimientos</h3>
 
-            @if (creditLoading()) {
+            @if (movementsLoading()) {
               <div class="space-y-3">
-                @for (i of [1,2,3]; track i) {
-                  <div class="flex justify-between items-center animate-pulse">
-                    <div>
-                      <div class="h-3.5 bg-gray-200 rounded w-28 mb-1.5"></div>
-                      <div class="h-3 bg-gray-100 rounded w-20"></div>
+                @for (i of [1,2,3,4]; track i) {
+                  <div class="flex items-center gap-3 animate-pulse">
+                    <div class="w-9 h-9 bg-gray-100 rounded-xl flex-shrink-0"></div>
+                    <div class="flex-1">
+                      <div class="h-3.5 bg-gray-200 rounded w-36 mb-1.5"></div>
+                      <div class="h-3 bg-gray-100 rounded w-24"></div>
                     </div>
                     <div class="h-4 bg-gray-200 rounded w-16"></div>
                   </div>
                 }
               </div>
-            } @else if (creditHistory().length === 0) {
+            } @else if (movements().length === 0) {
               <div class="text-center py-10">
+                <svg class="w-12 h-12 text-gray-200 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
                 <p class="text-gray-400 text-sm">No hay movimientos registrados</p>
               </div>
             } @else {
-              <div class="divide-y divide-gray-100">
-                @for (mov of creditHistory(); track mov.id) {
-                  <div class="flex items-center justify-between py-3.5">
-                    <div class="flex items-center gap-3">
-                      <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                        [class.bg-green-50]="mov.transactionType !== 'DEBIT'"
-                        [class.bg-red-50]="mov.transactionType === 'DEBIT'">
-                        @if (mov.transactionType === 'DEBIT') {
-                          <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/>
-                          </svg>
-                        } @else {
-                          <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
-                          </svg>
-                        }
-                      </div>
-                      <div>
-                        <p class="text-sm font-medium text-gray-900">{{ getCreditTypeLabel(mov.transactionType) }}</p>
-                        <p class="text-xs text-gray-400">{{ mov.createdAt | date:'dd MMM yyyy, HH:mm' }}</p>
-                        @if (mov.observations) {
-                          <p class="text-xs text-gray-400 mt-0.5 max-w-xs truncate">{{ mov.observations }}</p>
+              <div class="divide-y divide-gray-50">
+                @for (mov of movements(); track mov.id) {
+                  <div class="flex items-center gap-3 py-3.5">
+
+                    <!-- Ícono -->
+                    <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                      [class.bg-green-50]="mov.type === 'CREDIT_IN'"
+                      [class.bg-red-50]="mov.type === 'PURCHASE'">
+                      @if (mov.type === 'CREDIT_IN') {
+                        <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+                        </svg>
+                      } @else {
+                        <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                        </svg>
+                      }
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-gray-900">{{ mov.label }}</p>
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <p class="text-xs text-gray-400">{{ mov.date | date:'dd MMM yyyy, HH:mm' }}</p>
+                        @if (mov.sublabel) {
+                          <span class="text-xs text-gray-300">·</span>
+                          <span class="text-xs truncate max-w-40"
+                            [class]="mov.statusColor ? mov.statusColor : 'text-gray-400'">
+                            {{ mov.sublabel }}
+                          </span>
                         }
                       </div>
                     </div>
-                    <span class="text-sm font-bold flex-shrink-0" [class]="getCreditTypeColor(mov.transactionType)">
-                      {{ getCreditAmountPrefix(mov.transactionType) }}${{ mov.amount | number:'1.2-2' }}
+
+                    <!-- Monto -->
+                    <span class="text-sm font-bold flex-shrink-0"
+                      [class.text-green-600]="mov.type === 'CREDIT_IN'"
+                      [class.text-red-600]="mov.type === 'PURCHASE'">
+                      {{ mov.type === 'CREDIT_IN' ? '+' : '-' }}${{ mov.amount | number:'1.2-2' }}
                     </span>
+
                   </div>
                 }
               </div>
             }
           </div>
+
         </div>
       }
 

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { CartService } from '../../services/cart.service';
+import { NotificationsService } from '../../services/notifications.service';
 
 @Component({
   selector: 'app-header',
@@ -13,6 +14,7 @@ import { CartService } from '../../services/cart.service';
 export class HeaderComponent implements OnInit {
   readonly auth = inject(AuthService);
   readonly cart = inject(CartService);
+  private notificationsService = inject(NotificationsService);
   private router = inject(Router);
 
   isMenuOpen = signal(false);
@@ -21,6 +23,7 @@ export class HeaderComponent implements OnInit {
   ngOnInit(): void {
     if (this.auth.isAuthenticated()) {
       this.cart.load();
+      this.notificationsService.connect();
     }
   }
 
@@ -46,6 +49,7 @@ export class HeaderComponent implements OnInit {
 
   logout(): void {
     this.cart.clear();
+    this.notificationsService.disconnect();
     this.auth.logout();
     this.isUserMenuOpen.set(false);
   }

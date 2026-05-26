@@ -1,7 +1,8 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 import { ProductsService } from '../../shared/services/products.service';
 import { CategoriesService } from '../../shared/services/categories.service';
 import { OrdersService } from '../../shared/services/orders.service';
@@ -9,6 +10,7 @@ import { UsersAdminService } from '../../shared/services/users-admin.service';
 import { CreditService, CreateCreditDto } from '../../shared/services/credit.service';
 import { ReportsService, SalesSummary, BestSeller, StockAlert } from '../../shared/services/reports.service';
 import { AuthService } from '../../shared/services/auth.service';
+import { NotificationsService } from '../../shared/services/notifications.service';
 import { Product, Category } from '../../models/product.models';
 import { Order, ORDER_STATUS_LABELS, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from '../../models/order.models';
 import { User } from '../../models/auth.models';
@@ -21,7 +23,7 @@ export type AdminSection = 'dashboard' | 'pedidos' | 'productos' | 'categorias' 
   imports: [CommonModule, FormsModule],
   templateUrl: './admin.component.html',
 })
-export class AdminComponent implements OnInit {
+export class AdminComponent implements OnInit, OnDestroy {
   private productsService = inject(ProductsService);
   private categoriesService = inject(CategoriesService);
   private ordersService = inject(OrdersService);
@@ -29,7 +31,10 @@ export class AdminComponent implements OnInit {
   private creditService = inject(CreditService);
   private reportsService = inject(ReportsService);
   readonly auth = inject(AuthService);
+  private notificationsService = inject(NotificationsService);
   private router = inject(Router);
+
+  private notifSub?: Subscription;
 
   activeSection = signal<AdminSection>('dashboard');
   sidebarOpen = signal(false);
@@ -60,6 +65,7 @@ export class AdminComponent implements OnInit {
   ordersPage = signal(1);
   ordersTotal = signal(0);
   updatingOrderId = signal<string | null>(null);
+  newOrdersBadge = signal(0);
 
   // ── Productos
   products = signal<Product[]>([]);
@@ -110,6 +116,22 @@ export class AdminComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadDashboard();
+    this.notificationsService.connect();
+    this.notifSub = this.notificationsService.notification$.subscribe(n => {
+      if (n.type === 'ORDER') {
+        if (this.activeSection() === 'pedidos') {
+          this.loadOrders();
+        } else {
+          this.newOrdersBadge.update(v => v + 1);
+        }
+        this.ordersService.getAll(1, 1).subscribe({ next: res => this.ordersTotal.set(res.total ?? 0), error: () => {} });
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.notifSub?.unsubscribe();
+    this.notificationsService.disconnect();
   }
 
   goTo(section: AdminSection): void {
@@ -134,6 +156,11 @@ export class AdminComponent implements OnInit {
   }
 
   // ─────────────── PEDIDOS ───────────────
+  goToPedidos(): void {
+    this.newOrdersBadge.set(0);
+    this.goTo('pedidos');
+  }
+
   loadOrders(): void {
     this.ordersLoading.set(true);
     this.ordersService.getAll(this.ordersPage(), 15).subscribe({

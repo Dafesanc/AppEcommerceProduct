@@ -1,9 +1,22 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { AuthService } from '../../shared/services/auth.service';
 import { UsersAdminService } from '../../shared/services/users-admin.service';
+import { CreditService } from '../../shared/services/credit.service';
+import { OrdersService } from '../../shared/services/orders.service';
+
+export interface Movement {
+  id: string;
+  type: 'CREDIT_IN' | 'PURCHASE';
+  label: string;
+  sublabel: string;
+  amount: number;
+  date: string;
+  statusColor?: string;
+}
 
 @Component({
   selector: 'app-perfil',
@@ -13,6 +26,8 @@ import { UsersAdminService } from '../../shared/services/users-admin.service';
 export class PerfilComponent implements OnInit {
   readonly auth = inject(AuthService);
   private usersService = inject(UsersAdminService);
+  private creditService = inject(CreditService);
+  private ordersService = inject(OrdersService);
 
   activeTab = signal<'info' | 'credito'>('info');
   editMode = signal(false);
@@ -20,8 +35,15 @@ export class PerfilComponent implements OnInit {
   saveSuccess = signal('');
   saveError = signal('');
 
-  creditHistory = signal<any[]>([]);
-  creditLoading = signal(false);
+  movements = signal<Movement[]>([]);
+  movementsLoading = signal(false);
+
+  readonly totalSpent = computed(() =>
+    this.movements().filter(m => m.type === 'PURCHASE').reduce((s, m) => s + m.amount, 0)
+  );
+  readonly totalCredited = computed(() =>
+    this.movements().filter(m => m.type === 'CREDIT_IN').reduce((s, m) => s + m.amount, 0)
+  );
 
   profileForm = signal({
     firstName: '',
@@ -40,8 +62,7 @@ export class PerfilComponent implements OnInit {
 
   ngOnInit(): void {
     this.syncForm();
-    const user = this.auth.currentUser();
-    if (user) this.loadCreditHistory(user.id);
+    this.loadMovements();
   }
 
   private syncForm(): void {
@@ -58,12 +79,61 @@ export class PerfilComponent implements OnInit {
     }
   }
 
-  loadCreditHistory(userId: string): void {
-    this.creditLoading.set(true);
-    this.usersService.getCreditHistory(userId).subscribe({
-      next: data => { this.creditHistory.set(data); this.creditLoading.set(false); },
-      error: () => this.creditLoading.set(false),
+  loadMovements(): void {
+    this.movementsLoading.set(true);
+    forkJoin({
+      credits: this.creditService.getMyHistory(),
+      orders: this.ordersService.getAll(1, 100),
+    }).subscribe({
+      next: ({ credits, orders }) => {
+        const creditMovements: Movement[] = credits.map(c => ({
+          id: c.id,
+          type: 'CREDIT_IN',
+          label: this.getCreditTypeLabel(c.transactionType),
+          sublabel: c.observations || c.uniqueTransactionCode || '',
+          amount: c.amount,
+          date: c.createdAt,
+        }));
+
+        const orderMovements: Movement[] = (orders.data ?? []).map(o => ({
+          id: o.id,
+          type: 'PURCHASE',
+          label: `Pedido #${o.orderNumber}`,
+          sublabel: this.getPaymentMethodLabel(o.paymentMethod),
+          amount: o.total,
+          date: o.createdAt,
+          statusColor: this.getOrderStatusColor(o.status),
+        }));
+
+        const all = [...creditMovements, ...orderMovements]
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        this.movements.set(all);
+        this.movementsLoading.set(false);
+      },
+      error: () => this.movementsLoading.set(false),
     });
+  }
+
+  private getPaymentMethodLabel(method: string): string {
+    const m: Record<string, string> = {
+      CREDIT_BALANCE: 'Pagado con saldo',
+      TRANSFER: 'Transferencia bancaria',
+      CASH: 'Efectivo / Contra entrega',
+      PAYPAL: 'PayPal',
+    };
+    return m[method] ?? method;
+  }
+
+  private getOrderStatusColor(status: string): string {
+    const colors: Record<string, string> = {
+      PENDING: 'text-yellow-600',
+      CONFIRMED: 'text-blue-600',
+      PROCESSING: 'text-purple-600',
+      SHIPPED: 'text-indigo-600',
+      DELIVERED: 'text-green-600',
+      CANCELLED: 'text-red-500',
+    };
+    return colors[status] ?? 'text-gray-500';
   }
 
   startEdit(): void {
